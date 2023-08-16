@@ -2,12 +2,24 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.TextCore;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class Character2DController : MonoBehaviour
 {
+    readonly object _lock = new object();
+    Character2DController _instance;
+
+    public Character2DController Instance
+    {
+        get
+        {
+            return _instance;
+        }
+    }
+
     [Header("Movement")]
     [SerializeField]
     float moveSpeed = 300.0F;
@@ -47,6 +59,16 @@ public class Character2DController : MonoBehaviour
 
     void Awake()
     {
+        if (_instance == null)
+        {
+            lock (_lock)
+            {
+                if (_instance == null)
+                {
+                    _instance = this;
+                }
+            }
+        }
         _rb = GetComponent<Rigidbody2D>();
         _gravityY = Physics2D.gravity.y;
     }
@@ -78,6 +100,7 @@ public class Character2DController : MonoBehaviour
             bool isGrounded = IsGrounded();
             if (isGrounded)
             {
+                AudioManager.Instance.PlaySFX("Jump");
                 _rb.velocity = Vector2.up * jumpForce * Time.fixedDeltaTime;
             }
         }
